@@ -49,55 +49,73 @@ var doneFunc = (Obj) => {
   catch{}
 }
 
-var checkExistingUrls = function(url, done){
+/* var checkExistingUrls = function(url, done){
   return UrlModel.find({originalUrl : url}, function(err, data) {
     if (err) return console.error(err);
     done(createNewUrl(data, doneFunc));
   })
-}
+} */
 
 
-var checkFunctioningUrl = function(url, done){
-  let result = dns.lookup(url, function(err, data){
+
+
+
+
+
+var checkFunctioningUrl = function(url, callback){
+  var tempDnsUrl = url.slice(url.indexOf("//") + 2); //need to remove http(s)://
+  console.log("before check")
+
+  dns.lookup(tempDnsUrl, function(err, address, family){    
     if (err && err.code)  {
-      console.error(err.code)
+      console.error(err)
+      callback(err, null);      
+      } else {
+      console.log("dnslookup")
+      callback(null, address);
+      }
     }
-    done(data)
-  })
-  console.log(result)
-  
-  if(result != "error"){
-    return true
-  }
-  return false
+  ) 
+ 
 }
 
-
-var createNewUrl = function(url){  
+var createNewUrl = function(url, callback){  
   let newUrl = new UrlModel({originalUrl : url})
   newUrl.save(function(err, data) {
-    if (err) return console.error(err);
-    doneFunc(data)    
-  })
-  return newUrl
+    if (err) {
+      console.error(err)  
+      callback(err, null)   
+    }else{      
+      console.log("newUrl Mongo data : " + data)
+      callback(null, data)
+    }
+  }) 
 }
 
-// POST
 
+// POST
 app.post("/api/shorturl/new", function (req, res){
   let input = req.body.url
-  let output = "error"
-      //Object.keys(req)
-  let check = checkFunctioningUrl(input, doneFunc)
-  
-  /*
-  if(check == true){
-    let newModel = createNewUrl(input, doneFunc)
-    output = newModel._id
-  }
-  */
-  
-  res.json({"original_url" : input, "short_url" : check})
+      
+  checkFunctioningUrl(input, function(err, data){
+      if(err){
+        console.error(err)
+        res.json({"error":"invalid URL"})
+      } else {
+        console.log("check")
+        createNewUrl(input, function(err, newUrlData){
+          if(err){
+            console.error(err)
+          }else{             
+            console.log("final callback")
+            res.json({"original_url": input, "data":data})
+          }
+        })        
+      }
+  })  
+
+  //res.json({"res": input})
+
 })
 
 
