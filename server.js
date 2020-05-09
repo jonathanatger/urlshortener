@@ -12,7 +12,7 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Basic Configuration 
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 5500;
 
 /** this project needs a db !! **/ 
 // mongoose.connect(process.env.DB_URI);
@@ -82,10 +82,6 @@ var createNewUrl = function(url){
   return newUrl
 }
 
-
-
-
-  
 // POST
 
 app.post("/api/shorturl/new", function (req, res){
