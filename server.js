@@ -38,7 +38,8 @@ var Schema = mongoose.Schema;
 
 var urlSchema = new Schema({
   //identifier : Number,
-  originalUrl : String
+  originalUrl : String,
+  newUrl : String
 })
 
 
@@ -79,8 +80,8 @@ var checkFunctioningUrl = function(url, callback){
  
 }
 
-var createNewUrl = function(url, callback){  
-  let newUrl = new UrlModel({originalUrl : url})
+var createNewUrl = function(url, data, callback){  
+  let newUrl = new UrlModel({originalUrl : url, newUrl : data.toString() })
   newUrl.save(function(err, data) {
     if (err) {
       console.error(err)  
@@ -103,7 +104,7 @@ app.post("/api/shorturl/new", function (req, res){
         res.json({"error":"invalid URL"})
       } else {
         console.log("check")
-        createNewUrl(input, function(err, newUrlData){
+        createNewUrl(input, data, function(err, newUrlData){
           if(err){
             console.error(err)
           }else{             
@@ -113,13 +114,30 @@ app.post("/api/shorturl/new", function (req, res){
         })        
       }
   })  
-
-  //res.json({"res": input})
-
 })
 
 
+app.get("/api/shorturl/:ip", function(req, res){
+  let reqUrl = req.params.ip;
 
+  queryUrl(reqUrl, function(err, data){
+    if(err) console.error(err);
+    else{
+      console.log(data)
+      res.redirect(data[0].originalUrl);
+    }
+  })
+})
+
+var queryUrl = function (ip, callback){
+  UrlModel.find({newUrl : ip}, function(err,data){
+    if (err) {callback(err, null)}
+    else {
+      console.log(ip)
+      callback(null, data)
+    }
+  })
+}
 
 
 
